@@ -1,2 +1,25 @@
-# eip7702-auth-review
-Offline review of EIP-7702 authorization lists before signing.
+# EIP-7702 authorization review
+
+A small offline command-line tool for reviewing the authorization list from an EIP-7702 set-code transaction before signing.
+
+It checks the supplied chain ID and tuple field bounds, and calls out two details that are easy to miss while reviewing a raw list: a chain ID of `0` is valid across chains, and a zero delegate address clears the authority's existing delegation. It also reports byte-for-byte duplicate tuples as a review note.
+
+## Run
+
+Requires Python 3.10 or newer. No third-party packages are needed.
+
+```powershell
+py .\eip7702_auth_review.py .\examples\authorization-list.json
+```
+
+The input is JSON with `transaction_chain_id` and `authorization_list`. Each entry is an EIP-7702 tuple in this order: `[chain_id, address, nonce, y_parity, r, s]`. Integer fields may be JSON integers or decimal/`0x` strings.
+
+The included example uses synthetic values for demonstration; it is not a signed authorization.
+
+The command prints a review report and exits nonzero for malformed input or invalid field bounds. Review notes alone do not make the command fail.
+
+## Scope and limits
+
+This is a static input checker, not a wallet or transaction simulator. It does not recover the authority from `y_parity`, `r`, and `s`; verify signatures; check the target contract's bytecode; model execution; or establish that a delegation is safe. Review the target code and the wallet's transaction preview before signing. A valid signature can authorize code with broad access to the account.
+
+The implementation is based on [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702). This project was prepared with AI assistance; the maintainer should review and understand changes before relying on it.
