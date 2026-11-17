@@ -101,7 +101,9 @@ def main():
     args = parser.parse_args()
     try:
         document = json.loads(args.input.read_text(encoding="utf-8"))
-        print(json.dumps(review(document), indent=2))
+        report = review(document)
+        print(json.dumps(report, indent=2))
+        return 1 if report["signature_field_issues"] else 0
     except (OSError, json.JSONDecodeError, InputError) as exc:
         print(f"Input error: {exc}", file=sys.stderr)
         return 2
