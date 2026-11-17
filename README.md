@@ -2,7 +2,7 @@
 
 A small offline command-line tool for reviewing the authorization list from an EIP-7702 set-code transaction before signing.
 
-It checks the supplied chain ID and tuple field bounds, and calls out two details that are easy to miss while reviewing a raw list: a chain ID of `0` is valid across chains, and a zero delegate address clears the authority's existing delegation. It also reports byte-for-byte duplicate tuples as a review note.
+It checks the supplied chain ID and tuple field bounds, checks `y_parity` and the secp256k1 `r`/low-`s` ranges used for authorization recovery, and calls out two details that are easy to miss while reviewing a raw list: a chain ID of `0` is valid across chains, and a zero delegate address clears the authority's existing delegation. It also reports byte-for-byte duplicate tuples as a review note.
 
 ## Run
 
@@ -20,6 +20,6 @@ The command prints a review report and exits nonzero for malformed input or inva
 
 ## Scope and limits
 
-This is a static input checker, not a wallet or transaction simulator. It does not recover the authority from `y_parity`, `r`, and `s`; verify signatures; check the target contract's bytecode; model execution; or establish that a delegation is safe. Review the target code and the wallet's transaction preview before signing. A valid signature can authorize code with broad access to the account.
+This is a static input checker, not a wallet or transaction simulator. Range checks can identify impossible signature fields but do not recover the authority from `y_parity`, `r`, and `s` or verify a signature. It also does not check the target contract's bytecode, model execution, or establish that a delegation is safe. Review the target code and the wallet's transaction preview before signing. A valid signature can authorize code with broad access to the account.
 
-The implementation is based on [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702). This project was prepared with AI assistance; the maintainer should review and understand changes before relying on it.
+The implementation is based on [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702) and [EIP-2](https://eips.ethereum.org/EIPS/eip-2). This project was prepared with AI assistance; the maintainer should review and understand changes before relying on it.

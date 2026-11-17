@@ -9,6 +9,8 @@ from pathlib import Path
 
 MAX_UINT256 = 1 << 256
 MAX_UINT64 = 1 << 64
+SECP256K1_N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+SECP256K1_HALF_N = SECP256K1_N // 2
 ADDRESS_BYTES = 20
 ZERO_ADDRESS = "0x" + "0" * 40
 
@@ -56,6 +58,7 @@ def review(document):
         raise InputError("authorization_list must be a non-empty array")
 
     notes = []
+    signature_issues = []
     reviewed = []
     seen = set()
     for index, entry in enumerate(auths, start=1):
@@ -69,6 +72,12 @@ def review(document):
         s = parse_uint(entry[5], f"authorization {index} s", MAX_UINT256)
         item = {"chain_id": chain, "address": address, "nonce": nonce, "y_parity": parity, "r": r, "s": s}
 
+        if parity not in (0, 1):
+            signature_issues.append(f"Authorization {index}: y_parity must be 0 or 1 for signature recovery.")
+        if not 1 <= r < SECP256K1_N:
+            signature_issues.append(f"Authorization {index}: r is outside the valid secp256k1 scalar range.")
+        if not 1 <= s <= SECP256K1_HALF_N:
+            signature_issues.append(f"Authorization {index}: s is outside the valid low-s secp256k1 range.")
         if chain == 0:
             notes.append(f"Authorization {index}: chain_id 0 is valid across chains; review whether that scope is intended.")
         elif chain != tx_chain:
@@ -82,6 +91,7 @@ def review(document):
         reviewed.append(item)
 
     return {"transaction_chain_id": tx_chain, "authorization_count": len(reviewed), "authorizations": reviewed, "review_notes": notes,
+            "signature_field_issues": signature_issues,
             "limitations": ["Signatures and recovered authorities are not verified.", "Delegate bytecode and transaction execution are not inspected."]}
 
 
