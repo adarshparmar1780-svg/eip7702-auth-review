@@ -16,7 +16,7 @@ The input is JSON with `transaction_chain_id` and `authorization_list`. Each ent
 
 The included example uses synthetic values for demonstration; it is not a signed authorization.
 
-The command prints a JSON review report. It exits with `0` when no signature-field issue was detected, `1` when one or more signature-field issues were reported, and `2` for malformed input or fields outside their encoded bounds. Review notes such as chain-scope differences do not change the exit code.
+The command prints a JSON review report. It exits with `0` when no chain-ID or signature-field issue was detected, `1` when an authorization chain ID does not match the transaction or a signature field is outside the recovery ranges, and `2` for malformed input or fields outside their encoded bounds. Notes about chain ID `0` do not change the exit code.
 
 ## Scope and limits
 

@@ -58,6 +58,7 @@ def review(document):
         raise InputError("authorization_list must be a non-empty array")
 
     notes = []
+    chain_id_issues = []
     signature_issues = []
     reviewed = []
     seen = set()
@@ -81,7 +82,7 @@ def review(document):
         if chain == 0:
             notes.append(f"Authorization {index}: chain_id 0 is valid across chains; review whether that scope is intended.")
         elif chain != tx_chain:
-            notes.append(f"Authorization {index}: chain_id {chain} differs from transaction chain {tx_chain}; this tuple will not apply on that chain.")
+            chain_id_issues.append(f"Authorization {index}: chain_id {chain} differs from transaction chain {tx_chain}; this tuple will not apply on that chain.")
         if address == ZERO_ADDRESS:
             notes.append(f"Authorization {index}: zero address clears the authority's existing delegation.")
         fingerprint = tuple(item.values())
@@ -91,7 +92,7 @@ def review(document):
         reviewed.append(item)
 
     return {"transaction_chain_id": tx_chain, "authorization_count": len(reviewed), "authorizations": reviewed, "review_notes": notes,
-            "signature_field_issues": signature_issues,
+            "chain_id_issues": chain_id_issues, "signature_field_issues": signature_issues,
             "limitations": ["Signatures and recovered authorities are not verified.", "Delegate bytecode and transaction execution are not inspected."]}
 
 
@@ -103,7 +104,7 @@ def main():
         document = json.loads(args.input.read_text(encoding="utf-8"))
         report = review(document)
         print(json.dumps(report, indent=2))
-        return 1 if report["signature_field_issues"] else 0
+        return 1 if report["chain_id_issues"] or report["signature_field_issues"] else 0
     except (OSError, json.JSONDecodeError, InputError) as exc:
         print(f"Input error: {exc}", file=sys.stderr)
         return 2
