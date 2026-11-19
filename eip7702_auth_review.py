@@ -19,6 +19,37 @@ class InputError(ValueError):
     pass
 
 
+def format_text(report):
+    lines = [
+        "EIP-7702 authorization review",
+        f"Transaction chain ID: {report['transaction_chain_id']}",
+        f"Authorizations: {report['authorization_count']}",
+    ]
+    for index, auth in enumerate(report["authorizations"], start=1):
+        lines.extend([
+            "",
+            f"Authorization {index}:",
+            f"  Chain ID: {auth['chain_id']}",
+            f"  Delegate target: {auth['address']}",
+            f"  Nonce: {auth['nonce']}",
+            f"  y_parity: {auth['y_parity']}",
+            f"  r: 0x{auth['r']:064x}",
+            f"  s: 0x{auth['s']:064x}",
+        ])
+
+    issues = [*report["authorization_list_issues"], *report["chain_id_issues"], *report["signature_field_issues"]]
+    if report["review_notes"]:
+        lines.extend(["", "Review notes:"])
+        lines.extend(f"  - {note}" for note in report["review_notes"])
+    if issues:
+        lines.extend(["", "Issues:"])
+        lines.extend(f"  - {issue}" for issue in issues)
+    else:
+        lines.extend(["", "No reported field or list issues. This does not verify signatures or prove the delegation is safe."])
+    lines.append("Limitations: signatures and recovered authorities are not verified; delegate code and execution are not inspected.")
+    return "\n".join(lines)
+
+
 def parse_uint(value, label, limit):
     if isinstance(value, bool):
         raise InputError(f"{label} must be an integer")
@@ -109,11 +140,12 @@ def review(document):
 def main():
     parser = argparse.ArgumentParser(description="Review EIP-7702 authorization tuple fields offline.")
     parser.add_argument("input", type=Path, help="JSON file with authorization_list tuples or an RPC authorizationList")
+    parser.add_argument("--format", choices=("json", "text"), default="json", help="report format (default: json)")
     args = parser.parse_args()
     try:
         document = json.loads(args.input.read_text(encoding="utf-8"))
         report = review(document)
-        print(json.dumps(report, indent=2))
+        print(json.dumps(report, indent=2) if args.format == "json" else format_text(report))
         return 1 if report["authorization_list_issues"] or report["chain_id_issues"] or report["signature_field_issues"] else 0
     except (OSError, json.JSONDecodeError, InputError) as exc:
         print(f"Input error: {exc}", file=sys.stderr)

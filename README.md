@@ -2,7 +2,7 @@
 
 A small offline command-line tool for reviewing the authorization list from an EIP-7702 set-code transaction before signing.
 
-It checks the supplied chain ID and tuple field bounds, checks `y_parity` and the secp256k1 `r`/low-`s` ranges used for authorization recovery, and calls out two details that are easy to miss while reviewing a raw list: a chain ID of `0` is valid across chains, and a zero delegate address clears the authority's existing delegation. It also reports byte-for-byte duplicate tuples as a review note.
+It checks the supplied chain ID and tuple field bounds, checks `y_parity` and the secp256k1 `r`/low-`s` ranges used for authorization recovery, and calls out two details that are easy to miss while reviewing a raw list: a chain ID of `0` is valid across chains, and a zero delegate address clears the authority's existing delegation. It flags byte-for-byte duplicate tuples as an issue because a valid first copy advances the authority nonce.
 
 ## Run
 
@@ -12,13 +12,21 @@ Requires Python 3.10 or newer. No third-party packages are needed.
 py .\eip7702_auth_review.py .\examples\authorization-list.json
 ```
 
+For a readable terminal report, add `--format text`:
+
+```powershell
+py .\eip7702_auth_review.py .\examples\authorization-list.json --format text
+```
+
+JSON remains the default output for scripts. The text report shows the parsed authorization fields, review notes, and detected issues.
+
 The input may use the compact form with `transaction_chain_id` and `authorization_list` tuples. Each tuple is `[chain_id, address, nonce, y_parity, r, s]`; integer fields may be JSON integers or decimal/`0x` strings.
 
 It also accepts the object form returned by `eth_getTransactionByHash`: top-level `chainId` and `authorizationList`, with each authorization containing `chainId`, `address`, `nonce`, `yParity`, `r`, and `s`. RPC quantities are hexadecimal strings. Other transaction fields from the RPC response are ignored.
 
 The included example uses synthetic values for demonstration; it is not a signed authorization.
 
-The command prints a JSON review report. It exits with `0` when no authorization-list, chain-ID, or signature-field issue was detected, `1` for an exact duplicate tuple, a chain ID that does not match the transaction, or a signature field outside the recovery ranges, and `2` for malformed input or fields outside their encoded bounds. Notes about chain ID `0` do not change the exit code.
+The command prints a JSON report by default or a text report with `--format text`. It exits with `0` when no authorization-list, chain-ID, or signature-field issue was detected, `1` for an exact duplicate tuple, a chain ID that does not match the transaction, or a signature field outside the recovery ranges, and `2` for malformed input or fields outside their encoded bounds. Notes about chain ID `0` do not change the exit code.
 
 ## Scope and limits
 
