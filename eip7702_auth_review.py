@@ -50,12 +50,13 @@ def parse_address(value, index):
 def review(document):
     if not isinstance(document, dict):
         raise InputError("input must be a JSON object")
-    if "transaction_chain_id" not in document:
+    tx_chain_value = document.get("transaction_chain_id", document.get("chainId"))
+    if tx_chain_value is None:
         raise InputError("missing transaction_chain_id")
-    tx_chain = parse_uint(document["transaction_chain_id"], "transaction_chain_id", MAX_UINT256)
-    auths = document.get("authorization_list")
+    tx_chain = parse_uint(tx_chain_value, "transaction_chain_id", MAX_UINT256)
+    auths = document.get("authorization_list", document.get("authorizationList"))
     if not isinstance(auths, list) or not auths:
-        raise InputError("authorization_list must be a non-empty array")
+        raise InputError("authorization_list/authorizationList must be a non-empty array")
 
     notes = []
     authorization_list_issues = []
@@ -64,14 +65,21 @@ def review(document):
     reviewed = []
     seen = set()
     for index, entry in enumerate(auths, start=1):
-        if not isinstance(entry, list) or len(entry) != 6:
-            raise InputError(f"authorization {index}: expected [chain_id, address, nonce, y_parity, r, s]")
-        chain = parse_uint(entry[0], f"authorization {index} chain_id", MAX_UINT256)
-        address = parse_address(entry[1], index)
-        nonce = parse_uint(entry[2], f"authorization {index} nonce", MAX_UINT64 - 1)
-        parity = parse_uint(entry[3], f"authorization {index} y_parity", 1 << 8)
-        r = parse_uint(entry[4], f"authorization {index} r", MAX_UINT256)
-        s = parse_uint(entry[5], f"authorization {index} s", MAX_UINT256)
+        if isinstance(entry, list) and len(entry) == 6:
+            values = entry
+        elif isinstance(entry, dict):
+            names = ("chainId", "address", "nonce", "yParity", "r", "s")
+            if any(name not in entry for name in names):
+                raise InputError(f"authorization {index}: RPC object must include chainId, address, nonce, yParity, r, and s")
+            values = [entry[name] for name in names]
+        else:
+            raise InputError(f"authorization {index}: expected a six-field tuple or an RPC authorization object")
+        chain = parse_uint(values[0], f"authorization {index} chain_id", MAX_UINT256)
+        address = parse_address(values[1], index)
+        nonce = parse_uint(values[2], f"authorization {index} nonce", MAX_UINT64 - 1)
+        parity = parse_uint(values[3], f"authorization {index} y_parity", 1 << 8)
+        r = parse_uint(values[4], f"authorization {index} r", MAX_UINT256)
+        s = parse_uint(values[5], f"authorization {index} s", MAX_UINT256)
         item = {"chain_id": chain, "address": address, "nonce": nonce, "y_parity": parity, "r": r, "s": s}
 
         if parity not in (0, 1):
@@ -100,7 +108,7 @@ def review(document):
 
 def main():
     parser = argparse.ArgumentParser(description="Review EIP-7702 authorization tuple fields offline.")
-    parser.add_argument("input", type=Path, help="JSON file containing transaction_chain_id and authorization_list")
+    parser.add_argument("input", type=Path, help="JSON file with authorization_list tuples or an RPC authorizationList")
     args = parser.parse_args()
     try:
         document = json.loads(args.input.read_text(encoding="utf-8"))

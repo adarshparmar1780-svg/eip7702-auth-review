@@ -12,7 +12,9 @@ Requires Python 3.10 or newer. No third-party packages are needed.
 py .\eip7702_auth_review.py .\examples\authorization-list.json
 ```
 
-The input is JSON with `transaction_chain_id` and `authorization_list`. Each entry is an EIP-7702 tuple in this order: `[chain_id, address, nonce, y_parity, r, s]`. Integer fields may be JSON integers or decimal/`0x` strings.
+The input may use the compact form with `transaction_chain_id` and `authorization_list` tuples. Each tuple is `[chain_id, address, nonce, y_parity, r, s]`; integer fields may be JSON integers or decimal/`0x` strings.
+
+It also accepts the object form returned by `eth_getTransactionByHash`: top-level `chainId` and `authorizationList`, with each authorization containing `chainId`, `address`, `nonce`, `yParity`, `r`, and `s`. RPC quantities are hexadecimal strings. Other transaction fields from the RPC response are ignored.
 
 The included example uses synthetic values for demonstration; it is not a signed authorization.
 
