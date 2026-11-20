@@ -22,7 +22,7 @@ JSON remains the default output for scripts. The text report shows the parsed au
 
 The input may use the compact form with `transaction_chain_id` and `authorization_list` tuples. Each tuple is `[chain_id, address, nonce, y_parity, r, s]`; integer fields may be JSON integers or decimal/`0x` strings.
 
-It also accepts the object form returned by `eth_getTransactionByHash`: top-level `chainId` and `authorizationList`, with each authorization containing `chainId`, `address`, `nonce`, `yParity`, `r`, and `s`. RPC quantities are hexadecimal strings. Other transaction fields from the RPC response are ignored.
+It also accepts the object form returned by `eth_getTransactionByHash`: top-level `chainId` and `authorizationList`, with each authorization containing `chainId`, `address`, `nonce`, `yParity`, `r`, and `s`. You can pass either that result object or the full JSON-RPC response envelope containing it under `result`. RPC quantities are hexadecimal strings. Other transaction fields from the RPC response are ignored. A `null` result or an RPC `error` is reported as an input error.
 
 The included example uses synthetic values for demonstration; it is not a signed authorization.
 

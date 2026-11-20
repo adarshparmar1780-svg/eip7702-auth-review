@@ -144,6 +144,18 @@ def main():
     args = parser.parse_args()
     try:
         document = json.loads(args.input.read_text(encoding="utf-8"))
+        if isinstance(document, dict) and document.get("jsonrpc") == "2.0":
+            if "error" in document:
+                error = document["error"]
+                if isinstance(error, dict):
+                    raise InputError(f"JSON-RPC error {error.get('code', 'unknown')}: {error.get('message', 'unspecified error')}")
+                raise InputError("JSON-RPC response contains an invalid error object")
+            result = document.get("result")
+            if result is None:
+                raise InputError("JSON-RPC result is null; the transaction was not found")
+            if not isinstance(result, dict):
+                raise InputError("JSON-RPC result must be a transaction object")
+            document = result
         report = review(document)
         print(json.dumps(report, indent=2) if args.format == "json" else format_text(report))
         return 1 if report["authorization_list_issues"] or report["chain_id_issues"] or report["signature_field_issues"] else 0
