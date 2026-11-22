@@ -1,0 +1,19 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "type": "0x4",
+    "chainId": "0x1",
+    "hash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "authorizationList": [
+      {
+        "chainId": "0x1",
+        "address": "0x1111111111111111111111111111111111111111",
+        "nonce": "0x0",
+        "yParity": "0x0",
+        "r": "0x1",
+        "s": "0x2"
+      }
+    ]
+  }
+}
