@@ -28,6 +28,16 @@ The included example uses synthetic values for demonstration; it is not a signed
 
 The command prints a JSON report by default or a text report with `--format text`. It exits with `0` when no authorization-list, chain-ID, or signature-field issue was detected, `1` for an exact duplicate tuple, a chain ID that does not match the transaction, or a signature field outside the recovery ranges, and `2` for malformed input or fields outside their encoded bounds. Notes about chain ID `0` do not change the exit code.
 
+## Review a chain mismatch example
+
+The synthetic `examples/chain-mismatch.json` file uses transaction chain ID 1 and authorization chain ID 5. Run it with:
+
+```powershell
+py .\\eip7702_auth_review.py .\\examples\\chain-mismatch.json --format text
+```
+
+The report should flag that the authorization's chain ID differs from the transaction chain. The example values are illustrative and are not a signed authorization.
+
 ## Scope and limits
 
 This is a static input checker, not a wallet or transaction simulator. Range checks can identify impossible signature fields but do not recover the authority from `y_parity`, `r`, and `s` or verify a signature. It also does not check the target contract's bytecode, model execution, or establish that a delegation is safe. Review the target code and the wallet's transaction preview before signing. A valid signature can authorize code with broad access to the account.
