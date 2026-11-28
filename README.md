@@ -38,6 +38,16 @@ py .\\eip7702_auth_review.py .\\examples\\chain-mismatch.json --format text
 
 The report should flag that the authorization's chain ID differs from the transaction chain. The example values are illustrative and are not a signed authorization.
 
+## Review a JSON-RPC error response
+
+The synthetic `examples/rpc-error-response.json` file shows the shape of a JSON-RPC error response when a transaction lookup fails. Run it with:
+
+```powershell
+py .\\eip7702_auth_review.py .\\examples\\rpc-error-response.json
+```
+
+The tool should print an input error containing the provider's code and message, then exit with code 2. This fixture does not contact a node or represent a real transaction.
+
 ## Scope and limits
 
 This is a static input checker, not a wallet or transaction simulator. Range checks can identify impossible signature fields but do not recover the authority from `y_parity`, `r`, and `s` or verify a signature. It also does not check the target contract's bytecode, model execution, or establish that a delegation is safe. Review the target code and the wallet's transaction preview before signing. A valid signature can authorize code with broad access to the account.
